@@ -7,8 +7,8 @@ target "api" {
     context    = "."
     dockerfile = "Dockerfile"
     tags = [
-    "itzthedockerjules/lengauers-bistro:api-${RELEASE_TAG}",
-    "itzthedockerjules/lengauers-bistro:api-latest",
+    "itzthedockerjules/lengauers-bistro-api:${RELEASE_TAG}",
+    "itzthedockerjules/lengauers-bistro-api:latest",
   ]
     platforms = [
     "linux/amd64",

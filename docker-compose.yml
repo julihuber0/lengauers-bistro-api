@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: lengauers-bistro-db
+    environment:
+      POSTGRES_DB: lengauers_bistro
+      POSTGRES_USER: bistro_user
+      POSTGRES_PASSWORD: bistro_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bistro_user -d lengauers_bistro"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bistro-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lengauers-bistro-api
+    environment:
+      DATABASE_URL: postgresql://bistro_user:bistro_pass@postgres:5432/lengauers_bistro
+      PDF_URL: https://lengauers-bistro.de/wp-content/uploads/Tageskarte.pdf
+      SYNC_INTERVAL_HOURS: 6
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bistro-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  bistro-network:
+    driver: bridge
