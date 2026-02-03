@@ -1,5 +1,6 @@
 """Main application entry point."""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -18,25 +19,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# Create FastAPI app
-app = FastAPI(
-    title="Lengauer's Bistro API",
-    description="API for accessing daily menu from Lengauer's Bistro",
-    version="1.0.0"
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include API routes
-app.include_router(router)
 
 # Scheduler for periodic PDF sync
 scheduler = BackgroundScheduler()
@@ -58,9 +40,10 @@ def scheduled_sync():
         logger.error(f"Error during scheduled sync: {e}")
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    # Startup
     logger.info("Starting Lengauer's Bistro API...")
     
     # Initialize database
@@ -90,14 +73,34 @@ async def startup_event():
     )
     scheduler.start()
     logger.info(f"Scheduler started. PDF will sync every {config.SYNC_INTERVAL_HOURS} hours")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on application shutdown."""
+    
+    yield
+    
+    # Shutdown
     logger.info("Shutting down application...")
     scheduler.shutdown()
     logger.info("Scheduler stopped")
+
+
+# Create FastAPI app with lifespan
+app = FastAPI(
+    title="Lengauer's Bistro API",
+    description="API for accessing daily menu from Lengauer's Bistro",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API routes
+app.include_router(router)
 
 
 @app.get("/")

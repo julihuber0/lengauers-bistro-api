@@ -1,9 +1,12 @@
 """Database models for the menu application."""
 
-from sqlalchemy import Column, Integer, String, Float, Date, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Integer, String, Float, Date, UniqueConstraint
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Base class for all models."""
+    pass
 
 
 class MenuItem(Base):
@@ -11,10 +14,10 @@ class MenuItem(Base):
     
     __tablename__ = "menu_items"
     
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date, nullable=False, index=True)
-    name = Column(String, nullable=False)
-    price = Column(Float, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    date: Mapped[Date] = mapped_column(Date, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
     
     # Ensure we don't have duplicate dishes for the same date
     __table_args__ = (
