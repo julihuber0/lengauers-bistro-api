@@ -1,3 +1,6 @@
+# Docker Compose for Production
+# This uses the pre-built image from Docker Hub instead of building locally
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -5,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: lengauers_bistro
       POSTGRES_USER: bistro_user
-      POSTGRES_PASSWORD: bistro_pass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bistro_pass}  # Use env var in production
     ports:
       - "5432:5432"
     volumes:
@@ -17,16 +20,15 @@ services:
       retries: 5
     networks:
       - bistro-network
+    restart: always
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: itzthedockerjules/lengauers-bistro:api-latest
     container_name: lengauers-bistro-api
     environment:
-      DATABASE_URL: postgresql://bistro_user:bistro_pass@postgres:5432/lengauers_bistro
+      DATABASE_URL: postgresql://bistro_user:${POSTGRES_PASSWORD:-bistro_pass}@postgres:5432/lengauers_bistro
       PDF_URL: https://lengauers-bistro.de/wp-content/uploads/Tageskarte.pdf
-      SYNC_INTERVAL_HOURS: 6
+      SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-6}
       API_HOST: 0.0.0.0
       API_PORT: 8000
     ports:
@@ -36,7 +38,7 @@ services:
         condition: service_healthy
     networks:
       - bistro-network
-    restart: unless-stopped
+    restart: always
 
 volumes:
   postgres_data:

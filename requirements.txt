@@ -1,0 +1,22 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+psycopg2-binary
+alembic
+
+# PDF Processing
+pdfplumber
+requests
+
+# Scheduling
+apscheduler
+
+# Environment Variables
+python-dotenv
+
+# Testing (optional)
+pytest
+httpx
