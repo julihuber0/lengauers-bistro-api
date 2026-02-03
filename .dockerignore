@@ -1,51 +1,44 @@
-# Binaries
-bin/
-*.exe
-*.exe~
-*.dll
+# Docker ignore file
+__pycache__/
+*.py[cod]
+*$py.class
 *.so
-*.dylib
-
-# Test files
-*.test
-*.out
-coverage.txt
-coverage.html
-
-# Development files
-.env
-.env.local
-.env.*.local
-.air.toml
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+.Python
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+ENV/
 
 # Git
 .git/
+.github/
 .gitignore
-.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # Documentation
 *.md
 !README.md
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose.yml
+# Tests
+tests/
+*.pytest_cache
+
+# Local files
+Tageskarte.pdf
+parse_menu.py
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Temporary files
-tmp/
-temp/
