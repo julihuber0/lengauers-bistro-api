@@ -38,8 +38,9 @@ COPY src/ ./src/
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
-    # Make sure scripts in .local are usable
-    ENV PATH=/root/.local/bin:$PATH
+    chown -R appuser:appuser /app
+
+USER appuser
 
 # Expose port
 EXPOSE 8000
