@@ -23,6 +23,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Menu routes
 	r.GET("/menu", s.menuHandler.GetMenu)
+	r.POST("/menu/parse", s.menuHandler.ParsePDF)
 
 	return r
 }

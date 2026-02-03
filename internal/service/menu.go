@@ -23,6 +23,9 @@ type MenuService interface {
 
 	// FetchAndProcessPDF fetches the PDF and processes it
 	FetchAndProcessPDF(pdfURL string) error
+
+	// FetchAndParsePDF fetches and parses PDF without saving to database
+	FetchAndParsePDF(pdfURL string) (time.Time, []models.DailyMenu, error)
 }
 
 type menuService struct {
@@ -85,6 +88,45 @@ func (s *menuService) FetchAndProcessPDF(pdfURL string) error {
 
 	log.Printf("Successfully saved/updated %d items for %s", len(dishes), date.Format("2006-01-02"))
 	return nil
+}
+
+// FetchAndParsePDF fetches and parses PDF without saving to database
+func (s *menuService) FetchAndParsePDF(pdfURL string) (time.Time, []models.DailyMenu, error) {
+	log.Println("Fetching PDF from:", pdfURL)
+
+	// Fetch PDF
+	resp, err := http.Get(pdfURL)
+	if err != nil {
+		return time.Time{}, nil, fmt.Errorf("error fetching PDF: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return time.Time{}, nil, fmt.Errorf("error reading PDF body: %w", err)
+	}
+
+	// Parse PDF content
+	content, err := s.readPdfContent(bytes.NewReader(bodyBytes), int64(len(bodyBytes)))
+	if err != nil {
+		return time.Time{}, nil, fmt.Errorf("error parsing PDF: %w", err)
+	}
+
+	// Parse menu text
+	date, dishes := s.parseMenuText(content)
+	if date.IsZero() || len(dishes) == 0 {
+		log.Println("No valid menu data found in PDF")
+		return time.Time{}, nil, fmt.Errorf("no valid menu data found")
+	}
+
+	// Set the date for all items
+	for i := range dishes {
+		dishes[i].MenuDate = date
+	}
+
+	log.Printf("Successfully parsed %d items for %s", len(dishes), date.Format("2006-01-02"))
+	return date, dishes, nil
 }
 
 // readPdfContent extracts text content from PDF
