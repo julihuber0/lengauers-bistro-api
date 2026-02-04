@@ -113,9 +113,6 @@ class PDFParserService:
             r'EUR\s*(\d+[.,]\d{2})',    # EUR 12.50
         ]
         
-        # Header pattern to detect and extract text after colon
-        header_pattern = r'.*?\d{1,2}\.\d{1,2}\.\d{4}.*?:\s*(.+)'
-        
         i = 0
         while i < len(lines):
             line = lines[i]
@@ -142,15 +139,7 @@ class PDFParserService:
             
             # If no price in current line, accumulate lines until we find a price
             if not price:
-                # Check if this line is a header with date and colon
-                header_match = re.match(header_pattern, line)
-                if header_match:
-                    # Extract only the text after the colon
-                    text_after_colon = header_match.group(1).strip()
-                    if text_after_colon:
-                        dish_name_parts.append(text_after_colon)
-                else:
-                    dish_name_parts.append(line.strip())
+                dish_name_parts.append(line.strip())
                 j = i + 1
                 
                 # Look ahead to find the price and accumulate dish name parts
@@ -200,6 +189,10 @@ class PDFParserService:
                         dish_name += part
                     else:
                         dish_name += ' ' + part
+            
+            # Remove header text before colon if present
+            if ':' in dish_name:
+                dish_name = dish_name.split(':')[-1].strip()
             
             # If we have a valid dish name and price, add it
             if price and dish_name and len(dish_name) > 2:
