@@ -103,7 +103,7 @@ class PDFParserService:
         # Filter keywords to skip
         skip_keywords = [
             'tageskarte', 'speisekarte', 'menu', 'seite', 'page',
-            'externe', 'aufschlag', 'surcharge', 'zusätzlich'
+            'externe', 'aufschlag', 'surcharge', 'zusätzlich', 'desserts'
         ]
         
         for i, line in enumerate(lines):
