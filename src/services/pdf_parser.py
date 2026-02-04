@@ -106,40 +106,80 @@ class PDFParserService:
             'externe', 'aufschlag', 'surcharge', 'zusätzlich', 'desserts'
         ]
         
-        for i, line in enumerate(lines):
+        # Price patterns to match
+        price_patterns = [
+            r'€\s*(\d+[.,]\d{2})',      # € 12.50
+            r'(\d+[.,]\d{2})\s*€',      # 12,50 €
+            r'EUR\s*(\d+[.,]\d{2})',    # EUR 12.50
+        ]
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            
             # Skip empty lines and very short lines
             if not line.strip() or len(line.strip()) < 3:
+                i += 1
                 continue
             
-            # Price patterns to match
-            price_patterns = [
-                r'€\s*(\d+[.,]\d{2})',      # € 12.50
-                r'(\d+[.,]\d{2})\s*€',      # 12,50 €
-                r'EUR\s*(\d+[.,]\d{2})',    # EUR 12.50
-            ]
-            
             price = None
-            dish_name = line.strip()
+            dish_name_parts = []
             
-            # Check if price is in the same line
+            # Check if price is in the current line
             for pattern in price_patterns:
                 price_match = re.search(pattern, line)
                 if price_match:
                     price_str = price_match.group(1).replace(',', '.')
                     price = float(price_str)
                     # Remove the price from dish name
-                    dish_name = re.sub(r'€?\s*\d+[.,]\d{2}\s*€?', '', line).strip()
+                    dish_name_text = re.sub(r'€?\s*\d+[.,]\d{2}\s*€?', '', line).strip()
+                    if dish_name_text:
+                        dish_name_parts.append(dish_name_text)
                     break
             
-            # If no price found in this line, check next line
-            if not price and i + 1 < len(lines):
-                next_line = lines[i + 1]
-                for pattern in price_patterns:
-                    price_match = re.search(pattern, next_line)
-                    if price_match:
-                        price_str = price_match.group(1).replace(',', '.')
-                        price = float(price_str)
+            # If no price in current line, accumulate lines until we find a price
+            if not price:
+                dish_name_parts.append(line.strip())
+                j = i + 1
+                
+                # Look ahead to find the price and accumulate dish name parts
+                while j < len(lines) and not price:
+                    next_line = lines[j]
+                    
+                    # Check if this line contains a price
+                    for pattern in price_patterns:
+                        price_match = re.search(pattern, next_line)
+                        if price_match:
+                            price_str = price_match.group(1).replace(',', '.')
+                            price = float(price_str)
+                            # Get any text before the price in this line
+                            dish_name_text = re.sub(r'€?\s*\d+[.,]\d{2}\s*€?', '', next_line).strip()
+                            if dish_name_text:
+                                dish_name_parts.append(dish_name_text)
+                            break
+                    
+                    # If no price found and line is not empty, it's part of the dish name
+                    if not price and next_line.strip() and len(next_line.strip()) >= 3:
+                        # Stop if we hit another keyword that might indicate a new section
+                        if any(keyword in next_line.lower() for keyword in skip_keywords):
+                            break
+                        dish_name_parts.append(next_line.strip())
+                        j += 1
+                    elif not price:
+                        # Empty line or very short line without price - stop accumulating
                         break
+                    else:
+                        # Found price, continue
+                        j += 1
+                        break
+                
+                # Move index past all processed lines
+                i = j
+            else:
+                i += 1
+            
+            # Combine all parts of the dish name
+            dish_name = ' '.join(dish_name_parts)
             
             # If we have a valid dish name and price, add it
             if price and dish_name and len(dish_name) > 2:
