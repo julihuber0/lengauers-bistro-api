@@ -36,24 +36,10 @@ class MenuService:
             MenuItem.date == menu_date
         ).order_by(MenuItem.id).all()
     
-    def date_has_menu(self, menu_date: date) -> bool:
-        """
-        Check if menu items exist for a given date.
-        
-        Args:
-            menu_date: Date to check
-            
-        Returns:
-            True if menu items exist for this date
-        """
-        count = self.db.query(func.count(MenuItem.id)).filter(
-            MenuItem.date == menu_date
-        ).scalar()
-        return count > 0
-    
     def add_menu_items(self, menu_date: date, items: List[dict]) -> int:
         """
         Add menu items to database if they don't exist for the date.
+        Only skips dishes that already exist (same name).
         
         Args:
             menu_date: Date of the menu
@@ -62,14 +48,20 @@ class MenuService:
         Returns:
             Number of items added
         """
-        # Check if menu already exists for this date
-        if self.date_has_menu(menu_date):
-            print(f"Menu for {menu_date} already exists. Skipping import.")
-            return 0
+        # Get existing menu items for this date
+        existing_items = self.get_menu_by_date(menu_date)
         
-        # Add items
+        # Create a set of existing names for quick lookup
+        existing_dishes = {item.name for item in existing_items}
+        
+        # Add only new items that don't exist yet
         added_count = 0
+        skipped_count = 0
         for item in items:
+            if item['name'] in existing_dishes:
+                skipped_count += 1
+                continue
+            
             menu_item = MenuItem(
                 date=menu_date,
                 name=item['name'],
@@ -79,7 +71,12 @@ class MenuService:
             added_count += 1
         
         self.db.commit()
-        print(f"Added {added_count} menu items for {menu_date}")
+        
+        if added_count > 0:
+            print(f"Added {added_count} new menu items for {menu_date}")
+        if skipped_count > 0:
+            print(f"Skipped {skipped_count} existing menu items for {menu_date}")
+        
         return added_count
     
     def sync_from_pdf(self) -> dict:
