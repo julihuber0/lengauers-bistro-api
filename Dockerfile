@@ -1,5 +1,5 @@
 # Multi-stage build for Go API
-FROM golang:1.23-alpine AS go-builder
+FROM golang:1.26-alpine AS go-builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY internal/ ./internal/
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/api cmd/api/main.go
 
 # Python stage for sync script dependencies
-FROM python:3.14-slim AS python-builder
+FROM python:3.14.3 AS python-builder
 
 WORKDIR /app
 
@@ -36,7 +36,7 @@ COPY requirements.txt .
 RUN uv pip install --system --no-cache -r requirements.txt
 
 # Final runtime stage
-FROM python:3.14-slim
+FROM python:3.14.3-slim
 
 WORKDIR /app
 
