@@ -1,0 +1,40 @@
+[Unit]
+Description=Lengauer's Bistro API Server
+Documentation=https://github.com/lengauers-bistro/api
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/lengauers-bistro-api
+
+# Environment variables
+Environment="DB_HOST=localhost"
+Environment="DB_PORT=5432"
+Environment="DB_USER=bistro_user"
+Environment="DB_PASSWORD=bistro_pass"
+Environment="DB_NAME=lengauers_bistro"
+Environment="API_HOST=0.0.0.0"
+Environment="API_PORT=8000"
+Environment="GIN_MODE=release"
+
+# Executable
+ExecStart=/opt/lengauers-bistro-api/bin/api
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lengauers-api
+
+[Install]
+WantedBy=multi-user.target

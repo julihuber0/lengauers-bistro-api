@@ -25,9 +25,12 @@ services:
       dockerfile: Dockerfile
     container_name: lengauers-bistro-api
     environment:
-      DATABASE_URL: postgresql://bistro_user:bistro_pass@postgres:5432/lengauers_bistro
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: bistro_user
+      DB_PASSWORD: bistro_pass
+      DB_NAME: lengauers_bistro
       PDF_URL: https://lengauers-bistro.de/wp-content/uploads/Tageskarte.pdf
-      SYNC_INTERVAL_HOURS: 1
       API_HOST: 0.0.0.0
       API_PORT: 8000
     ports:

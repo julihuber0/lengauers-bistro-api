@@ -1,0 +1,30 @@
+# Lengauer's Bistro Menu Sync Cronjob
+#
+# This cronjob runs the sync script daily at 6:00 AM to fetch and parse
+# the latest menu PDF and insert items into the database.
+#
+# Installation:
+# 1. Edit this file with your actual paths
+# 2. Run: crontab -e
+# 3. Add the line below (uncommented)
+#
+# Syntax: minute hour day month weekday command
+# Example: Run daily at 6:00 AM
+
+# Daily sync at 6:00 AM
+0 6 * * * cd /opt/lengauers-bistro-api && /usr/bin/python3 scripts/sync_menu.py >> /var/log/lengauers-sync.log 2>&1
+
+# Alternative schedules (uncomment one if desired):
+#
+# Every 6 hours:
+# 0 */6 * * * cd /opt/lengauers-bistro-api && /usr/bin/python3 scripts/sync_menu.py >> /var/log/lengauers-sync.log 2>&1
+#
+# Twice daily (6 AM and 6 PM):
+# 0 6,18 * * * cd /opt/lengauers-bistro-api && /usr/bin/python3 scripts/sync_menu.py >> /var/log/lengauers-sync.log 2>&1
+#
+# Every weekday at 6 AM:
+# 0 6 * * 1-5 cd /opt/lengauers-bistro-api && /usr/bin/python3 scripts/sync_menu.py >> /var/log/lengauers-sync.log 2>&1
+
+# Note: Ensure environment variables are set
+# You can source them from a file like this:
+# 0 6 * * * cd /opt/lengauers-bistro-api && . /opt/lengauers-bistro-api/.env && /usr/bin/python3 scripts/sync_menu.py >> /var/log/lengauers-sync.log 2>&1
